@@ -10,11 +10,11 @@ def main():
     variable_check.check_n(settings)
 
     # Solutions
-    num_sol = fd_solver.solve(settings) # Numerical solution and corresponding domain
+    fd_sol = fd_solver.solve(settings) # Numerical solution and corresponding domain
     ana_sol = analytical.analytical_eq(settings) # Analytical solution and corresponding domain
 
     # Plot numerical and analytical solution
-    graphing.plot_sols(settings, ana_sol, num_sol)
+    graphing.plot_sols(settings, ana_sol, fd_sol)
 
     return None
 
