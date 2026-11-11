@@ -23,7 +23,7 @@ graph_settings = {
 variables = {
     'n': 100,    # Number of divisions
     'x0': 1e-9,    # Starting point
-    'b': 5,     # Arbitrary source boundary value
+    'b': 5,     # Arbitrary source boundary location
     'xn': 10,     # End point
     'e': 1e-9   # Arbitrarily small division
 }
@@ -49,7 +49,12 @@ B_coeffs = {
     'quadratic':0,          # For quadratic term
     'y0': 0,               # Fixed initial value
     'yb': 1/np.sqrt(50),    # Fixed field boundary value
-    'yn': 1     # Fixed final value (use if applicable)
+    'yn': 1 - np.exp(-np.sqrt(2)*variables['xn'])     # Fixed final value (use if applicable)
+}
+# Dictionary containing coefficients and values necessary for the Newton Raphson solver
+NR_coeffs = {
+    'N_max': 30, # Maximum number of iterations allowed
+    'tol': 1e-4 # Tolerance of NR solver
 }
 
 # Dictionary containing all previous nested for convenience
@@ -57,5 +62,6 @@ settings = {
     "graph_settings": graph_settings,
     "variables": variables,
     "A_coeffs": y_matrix_A_coeffs,
-    "B_coeffs": B_coeffs
+    "B_coeffs": B_coeffs,
+    "NR_coeffs": NR_coeffs
     }

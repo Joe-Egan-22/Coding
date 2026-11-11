@@ -8,45 +8,87 @@ Functions:
 
 '''
 
-from autograd import *
-from autograd.numpy import *
-from pylab import *
+import autograd as gr
+import numpy as np
+import matplotlib.pyplot as plt
+from config import settings
 
-def Fn(x,y,n):
+def Fn(x,y,n,X):
+    '''
+    Calculates the Fn function for Newton-Raphson
+    '''
+
+    # Define Heaviside step function Theta(x-X)
+    step = np.heaviside((x[1:-1] - X[1:-1]),0)
+
     h = (x[-1] - x[0]) / (n-1)
     ypp = (y[2:] - 2*y[1:-1] + y[:-2]) / h**2
     yp = (y[2:] - y[:-2]) / h
-    return ypp + (2/x[1:-1])*yp + 1*y[1:-1] - (y[1:-1])**3
+    return ypp + (2/x[1:-1])*yp + (1 - 25*step)*y[1:-1] - (y[1:-1])**3
 
-n = 50
-dom = (10,20)
-bv = 1/sqrt(50)
-ran = (bv,1)
-x = linspace(dom[0],dom[1],n)
-yg = linspace(ran[0],ran[1],n)
-yn = yg.copy()
-N_max = 30
 
-J = jacobian(lambda y: Fn(x, y, n))
+def get_domain(settings):
+    '''
+    Gets the domain for the problem
 
-for i in range(N_max):
-    Fy = Fn(x,yg,n)
+    Arguments:
+        Settings: Dict
 
-    Jy = J(yg)
+    Outputs:
+        dom: NumPy array
+    '''
 
-    delta_y = linalg.solve(Jy[:,1:-1], -Fy)
-    yn[1:-1] = yg[1:-1] + delta_y
-    if linalg.norm(delta_y) < 1e-4:
-        print(f"Converged in {i+1} iterations")
-        break
-    else:
-        yg = yn
+    x = np.linspace(settings['variables']['x0'], settings['variables']['xn'], (settings['variables']['n']+1))
 
-plot(x,yn,label='Newton-Raphson')
-title('Exterior Solution')
-xlabel('x')
-ylabel('y')
+    return x
 
-num = yn
+def nr_solve(settings):
+    '''
+    Solves Newton-Raphson problem, outputs solution
+    and domain
 
-print(num)
+    Arguments:
+        Settings: Dict
+
+    Outputs:
+
+    '''
+    # Get n
+    n = settings['variables']['n']
+
+    # Define domain
+    x = get_domain(settings)
+    X = np.full((n+1), settings['variables']['b'])
+
+    # Define other
+    yg = np.linspace(settings['B_coeffs']['y0'], settings['B_coeffs']['yn'], n+1)
+    yn = yg.copy()
+
+    # Define a Jacobian function
+    J = gr.jacobian(lambda y: Fn(x, y, n, X))
+
+    # Iterative NR method
+    for i in range(settings['NR_coeffs']['N_max']):
+        Fy = Fn(x,yg,n,X)
+
+        Jy = J(yg)
+
+        delta_y = np.linalg.solve(Jy[:,1:-1], -Fy)
+        yn[1:-1] = yg[1:-1] + delta_y
+        if np.linalg.norm(delta_y) < settings['NR_coeffs']['tol']:
+            print(f"Converged in {i+1} iterations")
+            break
+        else:
+            yg = yn
+
+    NR_sol = {'domain': x, 'solution': yn}
+
+    return NR_sol
+
+sol = nr_solve(settings)
+
+x = sol['domain']
+y = sol['solution']
+
+plt.plot(x,y)
+plt.show()
